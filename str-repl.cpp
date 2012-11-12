@@ -6,8 +6,10 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <vector>
 #include "mmap_file.h"
 #include "cmd_options.h"
+#include "disk.h"
 
 const char *option_dir = "dir";
 const char *option_verbose = "verbose";
@@ -25,13 +27,13 @@ cmd_option_t cmd_options[] =
 	{ option_verbose, "-v" /*opt*/, false /*mandatory*/, false /*has_data*/ },
 };
 
-void string_replace(
+bool string_replace(
 		const std::string &before,
-	   	const std::string &after,
-	   	const std::string &input_file,
-	   	const std::string &output_file)
+		const std::string &after,
+		const std::string &filename)
 {
-	mmap_file_t mmap_file(input_file);
+	std::stringstream ss(std::ios_base::out | std::ios_base::binary);
+	mmap_file_t mmap_file(filename);
 
 	if (mmap_file.valid())
 	{
@@ -43,24 +45,44 @@ void string_replace(
 				fprintf(stdout, "%c", pch[i]);
 		}
 #endif
-		std::ofstream ofs;
-		ofs.open(output_file.c_str(), std::ios_base::binary);
-		if (ofs.good())
+		const char * const pch_end = ((const char *)mmap_file.addr) + mmap_file.len;
+		if (streamed_replace(pch, pch_end, before, after, ss))
 		{
-			const char * const pch_end = ((const char *)mmap_file.addr) + mmap_file.len;
-			streamed_replace(pch, pch_end, before, after, ofs);
+			std::ofstream ofs;
+			std::string temp_file("/var/tmp/fak.tmp");
+			ofs.open(temp_file.c_str(), std::ios_base::binary);
+			if (ofs.good())
+			{
+				ofs.write(ss.str().c_str(), ss.str().size());
+			}
+			else
+			{
+				dlog(log_error, "couldn't open %s\n", temp_file.c_str());
+			}
+			ofs.close();
+			mmap_file.close();
+
+			/* we've written out the file to the string stream */
+			if (rename(temp_file.c_str(), filename.c_str()) == 0)
+			{
+				return true;
+			}
+			else
+			{
+				check_errno("string_replace file rename");
+			}
 		}
 		else
 		{
-			fprintf(stderr, "couldn't open %s\n", output_file.c_str());
-			exit(-2);
+			/* no match found */
 		}
-		ofs.close();
 	}
 	else
 	{
-		fprintf(stderr, "couldn't open %s\n", input_file.c_str());
+		dlog(log_error, "couldn't open %s\n", filename.c_str());
 	}
+
+	return false;
 }
 
 int main(int argc, char *argv[])
@@ -81,13 +103,28 @@ int main(int argc, char *argv[])
 	if (!get_option(options, option_replace, replace))
 		return EXIT_FAILURE;
 
-	fprintf(stderr, "TEST: dir is %s, find is %s, replace is %s\n",
+	dlog(log_info, "TEST: dir is %s, find is %s, replace is %s\n",
 			dir.c_str(), find.c_str(), replace.c_str());
 
-	// TODO loop over all files in dir building up a dictionary of filenames
+	std::vector<std::string> filenames;
+
+	for_each_file(dir,
+		[&filenames](const std::string &name, const for_each_file_stat_t &file_stat, for_each_control_t &control) {
+			control.recurse = true;
+			debug_ex(dlog(log_info, "found file %s\n", name.c_str()));
+			if (file_stat.regular_file())
+				filenames.push_back(name);
+		});
+
+	for (auto &filename : filenames)
+	{
+		if (string_replace(find, replace, filename))
+		{
+			dlog(log_info, "made replacements in %s\n", filename.c_str());
+		}
+	}
+
 	// TODO loop over all filenames in dictionary and run string_replace on the file
-	// TODO if the filename contains the "before" string, and we're doing filename replacement, then do that, too
-	// string_replace(before, after, input_file, output_file);
 
 	return 0;
 }

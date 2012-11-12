@@ -64,12 +64,12 @@ bool get_options(
 					dump_options(argv[0], options_, option_count);
 					return false;
 				}
-				debug(printf("setting option %s to %s\n", iter->codename, argv[i]));
+				debug_ex(printf("setting option %s to %s\n", iter->codename, argv[i]));
 				cmd_options[iter->codename] = argv[i];
 			}
 			else
 			{
-				debug(printf("setting option %s to yes\n", iter->codename));
+				debug_ex(printf("setting option %s to yes\n", iter->codename));
 				cmd_options[iter->codename] = "yes";
 			}
 		}

@@ -11,7 +11,7 @@
 #endif
 
 bool check_errno(const char *tag);
-void streamed_replace(const char *pch_begin, const char * const pch_end, const std::string &before, const std::string &after, std::ostream &ofs);
+bool streamed_replace(const char *pch_begin, const char *const pch_end, const std::string &before, const std::string &after, std::ostream &ofs);
 double get_current_time();
 
 inline bool mask(int grf, int grf_mask)
@@ -20,13 +20,13 @@ inline bool mask(int grf, int grf_mask)
 }
 
 template <typename T>
-inline size_t countof( const T &t )
+inline size_t countof(const T &t)
 {
 	return t.size();
 }
 
 template <typename T, size_t N>
-constexpr size_t countof( T (&array)[N] )
+constexpr size_t countof(T (&array)[N])
 {
 	return N;
 }

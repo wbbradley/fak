@@ -57,13 +57,14 @@ bool check_errno(const char *tag)
 	return false;
 }
 
-void streamed_replace(
+bool streamed_replace(
 		const char *pch,
 	   	const char * const pch_end,
 	   	const std::string &before,
 	   	const std::string &after,
 	   	std::ostream &ofs)
 {
+	bool found_before_target = false;
 	// TODO get rid of this poor man's ascii -> unicode to enable non-latin code pages, etc...
 	static_assert(sizeof(int16_t) == 2, "doh!");
 	std::basic_string<int16_t> wbefore, wafter;
@@ -97,6 +98,7 @@ void streamed_replace(
 		std::sort(nexts.begin(), nexts.end());
 		if (nexts.size() != 0)
 		{
+			found_before_target = true;
 			if (nexts[0] == wch_next)
 			{
 				ofs.write(pch, wch_next - pch);
@@ -122,7 +124,9 @@ void streamed_replace(
 			pch = pch_end;
 		}
 	}
+	return found_before_target;
 }
+
 double get_current_time()
 {
 	timeval tv;

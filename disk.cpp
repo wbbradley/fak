@@ -2,11 +2,6 @@
 #include <assert.h>
 #include "disk.h"
 #include <stdio.h>
-#include <dirent.h>
-#include <sys/errno.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/param.h>
 #include <string>
 #include <sstream>
 #include <unistd.h>
@@ -15,6 +10,7 @@
 #include <fstream>
 #include "logger_decls.h"
 #include "utils.h"
+#include <algorithm>
 
 bool file_exists(const std::string &file_path)
 {
@@ -199,3 +195,4 @@ std::string leaf_from_file_path(const std::string &file_path)
 
 	return file_path.substr(pos + 1);
 }
+

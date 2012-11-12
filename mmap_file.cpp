@@ -20,7 +20,7 @@ mmap_file_t::mmap_file_t(const std::string &filename)
 			addr = mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, 0 /*offset*/);
 			if (addr == MAP_FAILED)
 			{
-				close(fd);
+				::close(fd);
 				len = 0;
 				fd = -1;
 			}
@@ -38,7 +38,7 @@ bool mmap_file_t::valid() const
 	return (addr != MAP_FAILED) && (len > 0);
 }
 
-mmap_file_t::~mmap_file_t()
+void mmap_file_t::close()
 {
 	if (addr != MAP_FAILED)
 	{
@@ -50,10 +50,17 @@ mmap_file_t::~mmap_file_t()
 	}
 	if (fd >= 0)
 	{
-		if (close(fd) < 0)
+		if (::close(fd) < 0)
 		{
 			check_errno("mmap_file_t file close error");
 		}
 	}
+	addr = MAP_FAILED;
+	fd = -1;
+}
+
+mmap_file_t::~mmap_file_t()
+{
+	close();
 }
 

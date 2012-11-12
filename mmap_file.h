@@ -13,6 +13,7 @@ struct mmap_file_t
 	mmap_file_t() = delete;
 	mmap_file_t(const std::string &filename);
 	bool valid() const;
+	void close();
 	~mmap_file_t();
 
 	int fd;
