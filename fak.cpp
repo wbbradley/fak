@@ -85,6 +85,14 @@ bool string_replace(
 	return false;
 }
 
+bool valid_file_to_mess_with(const std::string &file_path)
+{
+	std::string leaf_name(leaf_from_file_path(file_path));
+	if (leaf_name == ".git")
+		return false;
+	return true;
+}
+
 int main(int argc, char *argv[])
 {
 	cmd_options_t options;
@@ -110,10 +118,13 @@ int main(int argc, char *argv[])
 
 	for_each_file(dir,
 		[&filenames](const std::string &name, const for_each_file_stat_t &file_stat, for_each_control_t &control) {
-			control.recurse = true;
-			debug_ex(dlog(log_info, "found file %s\n", name.c_str()));
-			if (file_stat.regular_file())
-				filenames.push_back(name);
+			if (valid_file_to_mess_with(name))
+			{
+				control.recurse = true;
+				debug_ex(dlog(log_info, "found file %s\n", name.c_str()));
+				if (file_stat.regular_file())
+					filenames.push_back(name);
+			}
 		});
 
 	for (auto &filename : filenames)

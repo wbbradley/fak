@@ -26,7 +26,7 @@ CFLAGS := \
 	-g \
 
 STR_REPL_SOURCES = \
-				 str-repl.cpp \
+				 fak.cpp \
 				 disk.cpp \
 				 mmap_file.cpp \
 				 cmd_options.cpp \
@@ -34,7 +34,7 @@ STR_REPL_SOURCES = \
 				 utils.cpp \
 
 STR_REPL_OBJECTS = $(addprefix $(BUILD_DIR)/,$(STR_REPL_SOURCES:.cpp=.o))
-STR_REPL_TARGET = str-repl
+STR_REPL_TARGET = fak
 
 TARGETS = $(STR_REPL_TARGET)
 
