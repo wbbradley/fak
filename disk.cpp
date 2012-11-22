@@ -14,26 +14,23 @@
 
 bool file_exists(const std::string &file_path)
 {
-	errno = 0;
-
 	if (file_path.size() == 0)
 		return false;
 
+	errno = 0;
 	return access(file_path.c_str(), R_OK) != -1;
 }
 
 bool folder_exists(const std::string &path)
 {
 	struct stat stDirInfo;
+
 	errno = 0;
-    if (lstat(path.c_str(), &stDirInfo) < 0)
-    {
-        return false;
-    }
-    if (!S_ISDIR(stDirInfo.st_mode))
-	{
-        return false;
-	}
+	if (lstat(path.c_str(), &stDirInfo) < 0)
+		return false;
+
+	if (!S_ISDIR(stDirInfo.st_mode))
+		return false;
 
 	return true;
 }
@@ -101,8 +98,8 @@ bool list_files(const std::string &folder,
 	{
 		std::string leaf_name = stFiles->d_name;
 		if (leaf_name == "."
-			|| leaf_name == ".."
-			|| (leaf_name.find(match) == std::string::npos))
+				|| leaf_name == ".."
+				|| (leaf_name.find(match) == std::string::npos))
 		{
 			continue;
 		}
@@ -141,7 +138,7 @@ bool move_files(const std::string &source, const std::string &dest)
 	{
 		std::string leaf_name = stFiles->d_name;
 		if (leaf_name == "."
-			|| leaf_name == "..")
+				|| leaf_name == "..")
 		{
 			continue;
 		}
