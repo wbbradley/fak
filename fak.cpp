@@ -20,10 +20,9 @@ const char *option_no_recurse = "no-recursion";
 
 cmd_option_t cmd_options[] =
 {
-	{ option_dir, "-d" /*opt*/, true /*mandatory*/, true /*has_data*/ },
 	{ option_find, "-f" /*opt*/, true /*mandatory*/, true /*has_data*/ },
-	// TODO make a mode that is just find
-	{ option_replace, "-r" /*opt*/, true /*mandatory*/, true /*has_data*/ },
+	{ option_dir, "-d" /*opt*/, false /*mandatory*/, true /*has_data*/ },
+	{ option_replace, "-r" /*opt*/, false /*mandatory*/, true /*has_data*/ },
 	{ option_no_recurse, "--no-recurse" /*opt*/, false /*mandatory*/, false /*has_data*/ },
 	{ option_filenames, "-F" /*opt*/, false /*mandatory*/, false /*has_data*/ },
 	{ option_verbose, "-v" /*opt*/, false /*mandatory*/, false /*has_data*/ },
@@ -32,7 +31,8 @@ cmd_option_t cmd_options[] =
 bool string_replace(
 		const std::string &before,
 		const std::string &after,
-		const std::string &filename)
+		const std::string &filename,
+		bool do_replace)
 {
 	std::stringstream ss(std::ios_base::out | std::ios_base::binary);
 	mmap_file_t mmap_file(filename);
@@ -48,7 +48,9 @@ bool string_replace(
 		}
 #endif
 		const char * const pch_end = ((const char *)mmap_file.addr) + mmap_file.len;
-		if (streamed_replace(pch, pch_end, before, after, ss))
+		if (streamed_replace( filename, pch, pch_end, before, after, ss,
+					true /*print_matches*/, true /*pretty_print*/, do_replace)
+				&& do_replace)
 		{
 			std::ofstream ofs;
 			std::string temp_file("/var/tmp/fak.tmp");
@@ -90,7 +92,7 @@ bool string_replace(
 bool valid_file_to_mess_with(const std::string &file_path)
 {
 	std::string leaf_name(leaf_from_file_path(file_path));
-	if (leaf_name == ".git")
+	if (leaf_name.size() != 0 && leaf_name[0] == '.')
 		return false;
 	return true;
 }
@@ -112,17 +114,17 @@ int main(int argc, char *argv[])
 
 	std::string dir;
 	if (!get_option(options, option_dir, dir))
-		return EXIT_FAILURE;
+		dir = ".";
 
 	std::string find;
 	if (!get_option(options, option_find, find))
 		return EXIT_FAILURE;
 
 	std::string replace;
-	if (!get_option(options, option_replace, replace))
-		return EXIT_FAILURE;
+	get_option(options, option_replace, replace);
+	bool do_replace = (replace.size() != 0);
 
-	dlog(log_info, "TEST: dir is %s, find is %s, replace is %s\n",
+	dlog(log_info, "dir is %s, find is %s, replace is %s\n",
 			dir.c_str(), find.c_str(), replace.c_str());
 
 	std::vector<std::string> filenames;
@@ -140,7 +142,7 @@ int main(int argc, char *argv[])
 
 	for (auto &filename : filenames)
 	{
-		if (string_replace(find, replace, filename))
+		if (string_replace(find, replace, filename, do_replace))
 		{
 			dlog(log_info, "made replacements in %s\n", filename.c_str());
 		}
