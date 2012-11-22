@@ -16,13 +16,15 @@ const char *option_verbose = "verbose";
 const char *option_find = "find";
 const char *option_replace = "replace";
 const char *option_filenames = "filenames";
+const char *option_no_recurse = "no-recursion";
 
 cmd_option_t cmd_options[] =
 {
-	{ option_dir, "--dir" /*opt*/, true /*mandatory*/, true /*has_data*/ },
-	{ option_find, "--find" /*opt*/, true /*mandatory*/, true /*has_data*/ },
+	{ option_dir, "-d" /*opt*/, true /*mandatory*/, true /*has_data*/ },
+	{ option_find, "-f" /*opt*/, true /*mandatory*/, true /*has_data*/ },
 	// TODO make a mode that is just find
-	{ option_replace, "--replace" /*opt*/, true /*mandatory*/, true /*has_data*/ },
+	{ option_replace, "-r" /*opt*/, true /*mandatory*/, true /*has_data*/ },
+	{ option_no_recurse, "--no-recurse" /*opt*/, false /*mandatory*/, false /*has_data*/ },
 	{ option_filenames, "-F" /*opt*/, false /*mandatory*/, false /*has_data*/ },
 	{ option_verbose, "-v" /*opt*/, false /*mandatory*/, false /*has_data*/ },
 };
@@ -99,6 +101,15 @@ int main(int argc, char *argv[])
 	if (!get_options(argc, argv, cmd_options, countof(cmd_options), options))
 		return EXIT_FAILURE;
 
+	if (get_option_exists(options, option_verbose))
+		log_enable(log_error | log_warning | log_info);
+	else
+		log_enable(log_error);
+
+	bool recurse_subdirectories = true;
+	if (get_option_exists(options, option_no_recurse))
+		recurse_subdirectories = false;
+
 	std::string dir;
 	if (!get_option(options, option_dir, dir))
 		return EXIT_FAILURE;
@@ -117,10 +128,10 @@ int main(int argc, char *argv[])
 	std::vector<std::string> filenames;
 
 	for_each_file(dir,
-		[&filenames](const std::string &name, const for_each_file_stat_t &file_stat, for_each_control_t &control) {
+		[&filenames,recurse_subdirectories](const std::string &name, const for_each_file_stat_t &file_stat, for_each_control_t &control) {
 			if (valid_file_to_mess_with(name))
 			{
-				control.recurse = true;
+				control.recurse = recurse_subdirectories;
 				debug_ex(dlog(log_info, "found file %s\n", name.c_str()));
 				if (file_stat.regular_file())
 					filenames.push_back(name);
