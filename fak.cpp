@@ -17,6 +17,7 @@ const char *option_find = "find";
 const char *option_replace = "replace";
 const char *option_filenames = "filenames";
 const char *option_no_recurse = "no-recursion";
+const char *option_no_color = "no-color";
 
 cmd_option_t cmd_options[] =
 {
@@ -25,6 +26,7 @@ cmd_option_t cmd_options[] =
 	{ option_replace, "-r" /*opt*/, false /*mandatory*/, true /*has_data*/ },
 	{ option_no_recurse, "--no-recurse" /*opt*/, false /*mandatory*/, false /*has_data*/ },
 	{ option_filenames, "-F" /*opt*/, false /*mandatory*/, false /*has_data*/ },
+	{ option_no_color, "--no-color" /*opt*/, false /*mandatory*/, false /*has_data*/ },
 	{ option_verbose, "-v" /*opt*/, false /*mandatory*/, false /*has_data*/ },
 };
 
@@ -32,7 +34,8 @@ bool string_replace(
 		const std::string &before,
 		const std::string &after,
 		const std::string &filename,
-		bool do_replace)
+		bool do_replace,
+		bool use_color)
 {
 	std::stringstream ss(std::ios_base::out | std::ios_base::binary);
 	mmap_file_t mmap_file(filename);
@@ -48,8 +51,8 @@ bool string_replace(
 		}
 #endif
 		const char * const pch_end = ((const char *)mmap_file.addr) + mmap_file.len;
-		if (streamed_replace( filename, pch, pch_end, before, after, ss,
-					true /*print_matches*/, true /*pretty_print*/, do_replace)
+		if (streamed_replace(filename, pch, pch_end, before, after, ss,
+					true /*print_matches*/, use_color /*pretty_print*/, do_replace)
 				&& do_replace)
 		{
 			std::ofstream ofs;
@@ -108,6 +111,10 @@ int main(int argc, char *argv[])
 	else
 		log_enable(log_error);
 
+	bool use_color = true;
+	if (get_option_exists(options, option_no_color))
+		use_color = false;
+
 	bool recurse_subdirectories = true;
 	if (get_option_exists(options, option_no_recurse))
 		recurse_subdirectories = false;
@@ -142,7 +149,7 @@ int main(int argc, char *argv[])
 
 	for (auto &filename : filenames)
 	{
-		if (string_replace(find, replace, filename, do_replace))
+		if (string_replace(find, replace, filename, do_replace, use_color))
 		{
 			dlog(log_info, "made replacements in %s\n", filename.c_str());
 		}

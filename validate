@@ -1,0 +1,77 @@
+#!/usr/bin/perl -w
+print "validate - a tool for validating fak\n";
+
+my $verbose = (grep /^-v$/, @ARGV) ? 1 : 0;
+my $here = (grep /^\.$/, @ARGV) ? 1 : 0;
+my $all = (grep /^-a$/, @ARGV) ? 1 : 0;
+
+sub usage
+{
+	print "validate - read the source\n";
+	die;
+}
+
+usage() if (grep /-h/, @ARGV);
+
+sub rsystem
+{
+    my ($cmd) = @_;
+    print "$cmd\n" if ($verbose);
+    (system($cmd) == 0) or die "validate : error : command failed: \"$cmd\"";
+}
+
+my $command = "$ARGV[1] -d $ARGV[0] -f 123 --no-color"; 
+print "running $command\n";
+my @fak_results = `$command`;
+
+my %checks = (
+	'test01.txt' => [[1,1]],
+	'test02.txt' => [[2,1]],
+	'test03.txt' => [[1,2]],
+	'test04.txt' => [[2,2]],
+	'test06.txt' => [[1,5],
+					 [1,13]],
+);
+
+sub results_contain_remove
+{
+	my ($hit, @fak_results) = @_;
+
+	$hit =~ s/\./\\./g;
+	$hit =~ s/\?/\\?/g;
+	$hit =~ s/\[/\\[/g;
+	$hit =~ s/\]/\\]/g;
+	$hit =~ s/\(/\\(/g;
+	$hit =~ s/\)/\\)/g;
+	$hit =~ s/\+/\\+/g;
+
+	my @filtered = (grep !m/$hit/, @fak_results);
+
+	return @filtered;
+}
+
+my $success = 1;
+for $filename (sort keys %checks)
+{
+	for $hit (@{$checks{$filename}})
+	{
+		my $test_result = $filename. ':' . $hit->[0] . ':' . $hit->[1];
+		my @filtered_fak_results = results_contain_remove($test_result, @fak_results);
+		if (scalar(@filtered_fak_results) + 1 != scalar(@fak_results))
+		{
+			print "validate : error : failed to find $test_result in fak test output data\n";
+			$success = 0;
+		}
+		@fak_results = @filtered_fak_results;
+	}
+}
+
+if (scalar(@fak_results) != 0)
+{
+	print "validate : error : found false positive test results:\n";
+	print join "", @fak_results;
+	$success = 0;
+}
+print "fak - tests PASSED!\n" if $success;
+print "fak - tests FAILED!\n" if !$success;
+exit !$success;

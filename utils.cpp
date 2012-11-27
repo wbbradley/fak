@@ -104,6 +104,7 @@ void print_match_line(
 		const std::string &input_buffer_name,
 	   	int line,
 	   	int char_offset,
+		bool pretty_print,
 	   	const char *pch_last_line_break,
 	   	const char *pch_next,
 		const char *pch_end,
@@ -125,24 +126,24 @@ void print_match_line(
 	if (contains_binary(prefix) || contains_binary(suffix))
 	{
 		printf("%s%s%s:%d:%d: <line matched but contained seemingly binary data>\n",
-				KRED,
+				pretty_print ? KRED : "",
 				input_buffer_name.c_str(),
-				KNRM,
+				pretty_print ? KNRM : "",
 				line,
 				char_offset);
 	}
 	else
 	{
 		printf("%s%s%s:%d:%d: %s%s%s%s%s\n",
-				KRED,
+				pretty_print ? KRED : "",
 			   	input_buffer_name.c_str(),
-				KNRM,
+				pretty_print ? KNRM : "",
 			   	line,
 			   	char_offset,
 				prefix.c_str(),
-				KBLU,
+				pretty_print ? KBLU : "",
 				text.c_str(),
-				KNRM,
+				pretty_print ? KNRM : "",
 				suffix.c_str());
 	}
 }
@@ -221,8 +222,8 @@ bool streamed_replace(
 				if (print_matches)
 				{
 					print_match_line(input_buffer_name, line, char_offset,
-							pch_last_line_break, pch_next, pch_end,
-							before.size());
+							pretty_print, pch_last_line_break, pch_next,
+							pch_end, before.size());
 				}
 				if (do_replace)
 				{

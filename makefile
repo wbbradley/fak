@@ -43,6 +43,11 @@ all: build-dir $(TARGETS)
 build-dir:
 	@if test ! -d $(BUILD_DIR); then mkdir -p $(BUILD_DIR); fi
 
+.PHONY: test
+
+test: $(STR_REPL_TARGET)
+	@perl -w validate ./tests ./$(STR_REPL_TARGET)
+
 $(STR_REPL_TARGET): $(STR_REPL_OBJECTS)
 	$(LINKER) $(LINKER_OPTS) $(STR_REPL_OBJECTS) -o $(STR_REPL_TARGET)
 
