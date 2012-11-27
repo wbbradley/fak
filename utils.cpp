@@ -102,13 +102,13 @@ bool contains_binary(const std::string &text)
 
 void print_match_line(
 		const std::string &input_buffer_name,
-	   	int line,
-	   	int char_offset,
+		int line,
+		int char_offset,
 		bool pretty_print,
-	   	const char *pch_last_line_break,
-	   	const char *pch_next,
+		const char *pch_last_line_break,
+		const char *pch_next,
 		const char *pch_end,
-	   	int run_length)
+		int run_length)
 {
 	const char *pch_end_of_line = pch_next;
 	while (true)
@@ -136,10 +136,10 @@ void print_match_line(
 	{
 		printf("%s%s%s:%d:%d: %s%s%s%s%s\n",
 				pretty_print ? KRED : "",
-			   	input_buffer_name.c_str(),
+				input_buffer_name.c_str(),
 				pretty_print ? KNRM : "",
-			   	line,
-			   	char_offset,
+				line,
+				char_offset,
 				prefix.c_str(),
 				pretty_print ? KBLU : "",
 				text.c_str(),
