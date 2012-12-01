@@ -43,14 +43,37 @@ bool string_replace(
 	if (mmap_file.valid())
 	{
 		auto pch = (const char *)mmap_file.addr;
+		auto len = mmap_file.len;
+
+		if ((*pch == -1)
+				&& (len > 1)
+				&& (*(pch + 1) == -2))
+		{
+			/* skip the BOM */
+			pch += 2;
+			len -= 2;
+
+			// TODO only search with Unicode search
+		}
+		else if ((*pch == -2)
+				&& (len > 1)
+				&& (*(pch + 1) == -1))
+		{
+			/* skip the BOM */
+			pch += 2;
+			len -= 2;
+
+			// TODO only search with Unicode search
+		}
+
 #ifdef EX_DEBUG
-		for (int i = 0; i != mmap_file.len; ++i)
+		for (int i = 0; i != len; ++i)
 		{
 			if (pch[i] != 0)
 				fprintf(stdout, "%c", pch[i]);
 		}
 #endif
-		const char * const pch_end = ((const char *)mmap_file.addr) + mmap_file.len;
+		const char * const pch_end = (pch + len);
 		if (streamed_replace(filename, pch, pch_end, before, after, ss,
 					true /*print_matches*/, use_color /*pretty_print*/, do_replace)
 				&& do_replace)
@@ -96,6 +119,8 @@ bool valid_file_to_mess_with(const std::string &file_path)
 {
 	std::string leaf_name(leaf_from_file_path(file_path));
 	if (leaf_name.size() != 0 && leaf_name[0] == '.')
+		return false;
+	if (leaf_name == "tags")
 		return false;
 	return true;
 }

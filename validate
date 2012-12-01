@@ -31,6 +31,8 @@ my %checks = (
 	'test04.txt' => [[2,2]],
 	'test06.txt' => [[1,5],
 					 [1,13]],
+	'test07.txt' => [[1,9]],
+	'test08.txt' => [[2,9]],
 );
 
 sub results_contain_remove
@@ -68,7 +70,7 @@ for $filename (sort keys %checks)
 
 if (scalar(@fak_results) != 0)
 {
-	print "validate : error : found false positive test results:\n";
+	print "validate : error : found " . scalar(@fak_results) . " false positive test results:\n";
 	print join "", @fak_results;
 	$success = 0;
 }

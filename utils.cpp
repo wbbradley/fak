@@ -68,9 +68,9 @@ bool check_errno(const char *tag)
 
 void advance_line_count(
 		const char *pch_dest,
-	   	int &line,
+		int &line,
 		int &char_offset,
-	   	const char *&pch_last_line_break)
+		const char *&pch_last_line_break)
 {
 	char_offset = 1;
 	const char *pch = pch_last_line_break;
@@ -78,6 +78,54 @@ void advance_line_count(
 	while (++pch != pch_dest)
 	{
 		if (*pch == '\n')
+		{
+			pch_last_line_break = pch;
+			char_offset = 1;
+			++line;
+		}
+		else
+		{
+			++char_offset;
+		}
+	}
+}
+
+void advance_line_count(
+		const uint16_t *pch_dest,
+		int &line,
+		int &char_offset,
+		const uint16_t *&pch_last_line_break)
+{
+	char_offset = 1;
+	const uint16_t *pch = pch_last_line_break;
+	assert(pch < pch_dest);
+	while (++pch != pch_dest)
+	{
+		if (*pch == '\n')
+		{
+			pch_last_line_break = pch;
+			char_offset = 1;
+			++line;
+		}
+		else
+		{
+			++char_offset;
+		}
+	}
+}
+
+void advance_line_count_be(
+		const uint16_t *pch_dest,
+		int &line,
+		int &char_offset,
+		const uint16_t *&pch_last_line_break)
+{
+	char_offset = 1;
+	const uint16_t *pch = pch_last_line_break;
+	assert(pch < pch_dest);
+	while (++pch != pch_dest)
+	{
+		if (*pch == (int('\n') << 8))
 		{
 			pch_last_line_break = pch;
 			char_offset = 1;
@@ -98,6 +146,25 @@ bool contains_binary(const std::string &text)
 			return true;
 	}
 	return false;
+}
+
+void print_match_line(
+		const std::string &input_buffer_name,
+		int line,
+		int char_offset,
+		bool pretty_print,
+		const uint16_t *wch_last_line_break,
+		const uint16_t *wch_next,
+		const char *pch_end,
+		int run_length)
+{
+	// TODO implement unicode output
+	printf("%s%s%s:%d:%d: <pattern found in unicode file>\n",
+			pretty_print ? KRED : "",
+			input_buffer_name.c_str(),
+			pretty_print ? KNRM : "",
+			line,
+			char_offset);
 }
 
 void print_match_line(
@@ -148,6 +215,18 @@ void print_match_line(
 	}
 }
 
+bool odd_pointer(const void *p)
+{
+	static_assert(sizeof(unsigned long) == sizeof(void *), "find a way to check this");
+	if (reinterpret_cast<unsigned long>(p) & 1)
+	{
+		debug_ex(dlog(log_info, "odd pointer is 0x%8lx\n", (unsigned long)p));
+		return true;
+	}
+
+	return false;
+}
+
 bool streamed_replace(
 		const std::string &input_buffer_name,
 		const char *pch_begin,
@@ -159,6 +238,9 @@ bool streamed_replace(
 		bool pretty_print,
 		bool do_replace)
 {
+	assert(odd_pointer((void *)0x1));
+	assert(!odd_pointer((void *)0x1004));
+
 	const char *pch = pch_begin;
 	bool found_before_target = false;
 
@@ -178,21 +260,35 @@ bool streamed_replace(
 	int line = 1;
 	int char_offset = 1;
 	const char *pch_last_line_break = pch_begin - 1;
+	const uint16_t *wch_last_line_break = ((const uint16_t *)pch_begin) - 1;
 
 	std::vector<const char *> nexts;
 	assert(((char *)wbefore.c_str())[0] == 0 || ((char *)wbefore.c_str())[1] == 0);
 	while (pch < pch_end)
 	{
-		const char *wch_next = (const char *)memmem(pch, pch_end - pch, &wbefore[0], wbefore.size() * sizeof(wbefore[0]));
-		const char *wch_next_be = (const char *)memmem(pch, pch_end - pch, &wbefore_be[0], wbefore_be.size() * sizeof(wbefore[0]));
+		const uint16_t *wch_next = (const uint16_t *)memmem(pch, pch_end - pch, &wbefore[0], wbefore.size() * sizeof(wbefore[0]));
+		const uint16_t *wch_next_be = (const uint16_t *)memmem(pch, pch_end - pch, &wbefore_be[0], wbefore_be.size() * sizeof(wbefore[0]));
 		const char *pch_next = (const char *)memmem(pch, pch_end - pch, before.c_str(), before.size());
 
+		if (odd_pointer(wch_next))
+		{
+			dlog(log_info, "clearing wch_next in file %s\n",
+					input_buffer_name.c_str());
+			wch_next = nullptr;
+		}
+
+		if (odd_pointer(wch_next_be))
+		{
+			dlog(log_info, "clearing wch_next_be in file %s\n",
+					input_buffer_name.c_str());
+			wch_next_be = nullptr;
+		}
 		nexts.resize(0);
 
 		if (wch_next != nullptr)
-			nexts.push_back(wch_next);
+			nexts.push_back((const char *)wch_next);
 		if (wch_next_be != nullptr)
-			nexts.push_back(wch_next_be);
+			nexts.push_back((const char *)wch_next_be);
 		if (pch_next != nullptr)
 			nexts.push_back(pch_next);
 
@@ -200,20 +296,39 @@ bool streamed_replace(
 		if (nexts.size() != 0)
 		{
 			found_before_target = true;
-			if (nexts[0] == wch_next)
+			if (nexts[0] == (const char *)wch_next)
 			{
-				ofs.write(pch, wch_next - pch);
-				ofs.write((const char *)wafter.c_str(), wafter.size() * sizeof(wafter[0]));
-				pch = wch_next + (wbefore.size() * sizeof(wbefore[0]));
-			}
-			if (nexts[0] == wch_next_be)
-			{
+				advance_line_count(wch_next, line, char_offset, wch_last_line_break);
+
+				if (print_matches)
+				{
+					print_match_line(input_buffer_name, line, char_offset,
+							pretty_print, wch_last_line_break, wch_next,
+							pch_end, before.size());
+				}
 				if (do_replace)
 				{
-					ofs.write(pch, wch_next_be - pch);
+					ofs.write(pch, ((const char *)(wch_next)) - pch);
+					ofs.write((const char *)wafter.c_str(), wafter.size() * sizeof(wafter[0]));
+				}
+				pch = ((const char *)wch_next) + (wbefore.size() * sizeof(wbefore[0]));
+			}
+			if (nexts[0] == (const char *)wch_next_be)
+			{
+				advance_line_count_be(wch_next_be, line, char_offset, wch_last_line_break);
+
+				if (print_matches)
+				{
+					print_match_line(input_buffer_name, line, char_offset,
+							pretty_print, wch_last_line_break, wch_next_be,
+							pch_end, before.size());
+				}
+				if (do_replace)
+				{
+					ofs.write(pch, ((const char *)(wch_next_be)) - pch);
 					ofs.write((const char *)wafter_be.c_str(), wafter_be.size() * sizeof(wafter_be[0]));
 				}
-				pch = wch_next_be + (wbefore_be.size() * sizeof(wbefore_be[0]));
+				pch = ((const char *)wch_next_be) + (wbefore_be.size() * sizeof(wbefore_be[0]));
 			}
 			else if (nexts[0] == pch_next)
 			{
