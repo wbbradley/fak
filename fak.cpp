@@ -87,7 +87,7 @@ bool string_replace(
 			}
 			else
 			{
-				dlog(log_error, "couldn't open %s\n", temp_file.c_str());
+				debug_ex(dlog(log_error, "couldn't open %s\n", temp_file.c_str()));
 			}
 			ofs.close();
 			mmap_file.close();
@@ -109,7 +109,7 @@ bool string_replace(
 	}
 	else
 	{
-		dlog(log_error, "couldn't open %s\n", filename.c_str());
+		debug_ex(dlog(log_error, "couldn't open %s\n", filename.c_str()));
 	}
 
 	return false;
