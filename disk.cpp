@@ -6,7 +6,6 @@
 #include <sstream>
 #include <unistd.h>
 #include <string.h>
-#include <copyfile.h>
 #include <fstream>
 #include "logger_decls.h"
 #include "utils.h"
