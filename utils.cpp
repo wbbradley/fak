@@ -7,6 +7,7 @@
 #include <sys/errno.h>
 #include <sys/socket.h>
 #include <sys/sysctl.h>
+#include <sys/time.h>
 #include <net/if.h>
 #include <iomanip>
 #include "logger_decls.h"
