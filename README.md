@@ -1,5 +1,4 @@
 # fak
-===
 
 [![Build Status](https://travis-ci.org/wbbradley/fak.png?branch=master)](https://travis-ci.org/wbbradley/fak)
 
