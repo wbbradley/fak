@@ -10,6 +10,7 @@
 #include <net/if.h>
 #include <iomanip>
 #include "logger_decls.h"
+#include <fstream>
 
 #define case_error(error) case error: error_string = #error; break
 
