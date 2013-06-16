@@ -23,7 +23,7 @@ cmd_option_t cmd_options[] =
 {
 	{ option_find, "-f" /*opt*/, true /*mandatory*/, true /*has_data*/ },
 	{ option_dir, "-d" /*opt*/, false /*mandatory*/, true /*has_data*/ },
-	{ option_replace, "-r" /*opt*/, true /*mandatory*/, true /*has_data*/ },
+	{ option_replace, "-r" /*opt*/, false /*mandatory*/, true /*has_data*/ },
 	{ option_no_recurse, "--no-recurse" /*opt*/, false /*mandatory*/, false /*has_data*/ },
 	{ option_filenames, "-F" /*opt*/, false /*mandatory*/, false /*has_data*/ },
 	{ option_no_color, "--no-color" /*opt*/, false /*mandatory*/, false /*has_data*/ },
