@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/stat.h>
+#include <string.h>
 
 using std::tr1::shared_ptr;
 
