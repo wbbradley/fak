@@ -3,7 +3,11 @@
 #include <string>
 #include <stdint.h>
 #include <iostream>
+#ifndef MACOS
 #include <tr1/memory>
+#else
+#include <memory>
+#endif
 #include <iosfwd>
 #include <vector>
 #include "logger_decls.h"
@@ -14,7 +18,11 @@
 #include <sys/stat.h>
 #include <string.h>
 
+#ifndef MACOS
 using std::tr1::shared_ptr;
+#else
+using std::shared_ptr;
+#endif
 
 bool folder_exists(const std::string &path);
 bool file_exists(const std::string &file_path);

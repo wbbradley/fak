@@ -1,6 +1,7 @@
 // REVIEWED
 #include "mmap_file.h"
 #include <assert.h>
+#include <unistd.h>
 
 mmap_file_t::mmap_file_t(const std::string &filename)
 {

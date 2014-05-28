@@ -3,9 +3,9 @@ DEBUG_FLAGS := -DDEBUG -g -O0
 NDEBUG_FLAGS := -g -O3
 
 ifeq ($(UNAME),Darwin)
-	CPP = clang -std=gnu++0x -DMACOS
+	CPP = clang++ -std=c++11 -DMACOS
 	CC = clang -DMACOS
-	LINKER = clang -stdlib=libstdc++ -lstdc++
+	LINKER = clang -stdlib=libc++ -lc++
 	LINKER_OPTS := $(NDEBUG_FLAGS)
 	LINKER_DEBUG_OPTS := $(DEBUG_FLAGS)
 else

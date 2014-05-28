@@ -5,6 +5,7 @@
 #include <string.h>
 #include <vector>
 #include "utils.h"
+#include <stdlib.h>
 
 auto find_option(const char *arg, std::vector<cmd_option_t> &options) -> decltype(options.end())
 {
