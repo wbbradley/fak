@@ -6,5 +6,6 @@ RUN \
 COPY . src
 
 RUN \
-	cd src \
+	ls \
+	&& cd src \
 	&& make
