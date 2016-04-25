@@ -3,7 +3,8 @@ RUN \
 	apt-get update \
 	&& apt-get install -y make clang
 
-COPY .. /tmp
+COPY . src
 
-RUN cd /tmp \
+RUN \
+	cd src \
 	&& make
