@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <unistd.h>
 #include <vector>
 #include "mmap_file.h"
 #include "cmd_options.h"
@@ -136,7 +137,7 @@ int main(int argc, char *argv[])
 	else
 		log_enable(log_error);
 
-	bool use_color = true;
+	bool use_color = isatty(STDOUT_FILENO);
 	if (get_option_exists(options, option_no_color))
 		use_color = false;
 
