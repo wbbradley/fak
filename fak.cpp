@@ -116,12 +116,17 @@ bool string_replace(
 	return false;
 }
 
+const std::string TAGS = "tags";
+const std::string LIB_SUFFIX = ".o";
+
 bool valid_file_to_mess_with(const std::string &file_path)
 {
 	std::string leaf_name(leaf_from_file_path(file_path));
 	if (leaf_name.size() != 0 && leaf_name[0] == '.')
 		return false;
-	if (leaf_name == "tags")
+	if (leaf_name == TAGS)
+		return false;
+	if (ends_with(leaf_name, LIB_SUFFIX))
 		return false;
 	return true;
 }

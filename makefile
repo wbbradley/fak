@@ -11,7 +11,7 @@ ifeq ($(UNAME),Darwin)
 else
 	CPP = g++ -std=c++0x
 	CC = gcc
-	LINKER = g++ -stdlib=libc++0x
+	LINKER = g++ -std=gnu++11
 	LINKER_OPTS := -pthread $(NDEBUG_FLAGS)
 	LINKER_DEBUG_OPTS := -pthread $(DEBUG_FLAGS)
 endif

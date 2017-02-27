@@ -368,3 +368,12 @@ double get_current_time()
 	return time_now;
 }
 
+bool ends_with(const std::string &str, const std::string &search) {
+	int pos = str.size() - search.size();
+	if (pos >= 0) {
+		return str.find(search, pos) == (size_t)pos;
+	} else {
+		return false;
+	}
+}
+

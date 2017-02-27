@@ -31,3 +31,4 @@ constexpr size_t countof(T (&array)[N])
 	return N;
 }
 
+bool ends_with(const std::string &str, const std::string &search);
