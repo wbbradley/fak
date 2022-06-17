@@ -3,14 +3,14 @@ DEBUG_FLAGS := -DDEBUG -g -O0
 NDEBUG_FLAGS := -g -O3
 
 ifeq ($(UNAME),Darwin)
-	CPP = clang++ -std=c++11 -DMACOS
-	CC = clang -DMACOS
+	CPP = clang++ -std=c++11 -DMACOS -O3
+	CC = clang -DMACOS -O3
 	LINKER = clang -stdlib=libc++ -lc++
 	LINKER_OPTS := $(NDEBUG_FLAGS)
 	LINKER_DEBUG_OPTS := $(DEBUG_FLAGS)
 else
-	CPP = g++ -std=c++0x
-	CC = gcc
+	CPP = g++ -std=c++0x -O3
+	CC = gcc -O3
 	LINKER = g++ -std=gnu++11
 	LINKER_OPTS := -pthread $(NDEBUG_FLAGS)
 	LINKER_DEBUG_OPTS := -pthread $(DEBUG_FLAGS)
