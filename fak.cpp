@@ -1,16 +1,15 @@
-// REVIEWED
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <unistd.h>
-#include <vector>
-#include "mmap_file.h"
 #include "cmd_options.h"
 #include "disk.h"
+#include "mmap_file.h"
+#include <fcntl.h>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include <unistd.h>
+#include <vector>
 
 const char *option_dir = "dir";
 const char *option_verbose = "verbose";
@@ -58,7 +57,8 @@ bool string_replace(const std::string &before, const std::string &after,
 
 #ifdef EX_DEBUG
     for (int i = 0; i != len; ++i) {
-      if (pch[i] != 0) fprintf(stdout, "%c", pch[i]);
+      if (pch[i] != 0)
+        fprintf(stdout, "%c", pch[i]);
     }
 #endif
     const char *const pch_end = (pch + len);
@@ -94,13 +94,24 @@ bool string_replace(const std::string &before, const std::string &after,
 }
 
 const std::string TAGS = "tags";
+const std::string BUILD = "build";
+const std::string ENV = "env";
 const std::string LIB_SUFFIX = ".o";
+const std::string SHARED_LIB_SUFFIX = ".so";
+const std::string PYC_SUFFIX = ".pyc";
 
 bool valid_file_to_mess_with(const std::string &file_path) {
   std::string leaf_name(leaf_from_file_path(file_path));
-  if (leaf_name.size() != 0 && leaf_name[0] == '.') return false;
-  if (leaf_name == TAGS) return false;
-  if (ends_with(leaf_name, LIB_SUFFIX)) return false;
+  if (leaf_name.size() != 0 && leaf_name[0] == '.') {
+    return false;
+  }
+  if (leaf_name == TAGS || leaf_name == BUILD || leaf_name == ENV) {
+    return false;
+  }
+  if (ends_with(leaf_name, LIB_SUFFIX) || ends_with(leaf_name, PYC_SUFFIX) ||
+      ends_with(leaf_name, SHARED_LIB_SUFFIX)) {
+    return false;
+  }
   return true;
 }
 
@@ -116,14 +127,16 @@ int main(int argc, char *argv[]) {
     log_enable(log_error);
 
   bool use_color = isatty(STDOUT_FILENO);
-  if (get_option_exists(options, option_no_color)) use_color = false;
+  if (get_option_exists(options, option_no_color))
+    use_color = false;
 
   bool recurse_subdirectories = true;
   if (get_option_exists(options, option_no_recurse))
     recurse_subdirectories = false;
 
   std::string dir;
-  if (!get_option(options, option_dir, dir)) dir = ".";
+  if (!get_option(options, option_dir, dir))
+    dir = ".";
 
   std::string find;
   if (!get_option(options, option_find, find)) {
@@ -139,16 +152,18 @@ int main(int argc, char *argv[]) {
 
   std::vector<std::string> filenames;
 
-  for_each_file(
-      dir, [&filenames, recurse_subdirectories](
-               const std::string &name, const for_each_file_stat_t &file_stat,
-               for_each_control_t &control) {
-        if (valid_file_to_mess_with(name)) {
-          control.recurse = recurse_subdirectories;
-          debug_ex(dlog(log_info, "found file %s\n", name.c_str()));
-          if (file_stat.regular_file()) filenames.push_back(name);
-        }
-      });
+  for_each_file(dir, [&filenames, recurse_subdirectories](
+                         const std::string &name,
+                         const for_each_file_stat_t &file_stat,
+                         for_each_control_t &control) {
+    if (valid_file_to_mess_with(name)) {
+      control.recurse = recurse_subdirectories;
+      debug_ex(dlog(log_info, "found file %s\n", name.c_str()));
+      if (file_stat.regular_file()) {
+        filenames.push_back(name);
+      }
+    }
+  });
 
   for (auto &filename : filenames) {
     if (string_replace(find, replace, filename, do_replace, use_color)) {
@@ -158,4 +173,3 @@ int main(int argc, char *argv[]) {
 
   return EXIT_SUCCESS;
 }
-
