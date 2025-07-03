@@ -95,6 +95,8 @@ bool string_replace(const std::string &before, const std::string &after,
 
 const std::string TAGS = "tags";
 const std::string BUILD = "build";
+const std::string TARGET = "target";
+const std::string DOCS = "docs";
 const std::string ENV = "env";
 const std::string LIB_SUFFIX = ".o";
 const std::string SHARED_LIB_SUFFIX = ".so";
@@ -105,7 +107,8 @@ bool valid_file_to_mess_with(const std::string &file_path) {
   if (leaf_name.size() != 0 && leaf_name[0] == '.') {
     return false;
   }
-  if (leaf_name == TAGS || leaf_name == BUILD || leaf_name == ENV) {
+  if (leaf_name == TAGS || leaf_name == BUILD || leaf_name == ENV ||
+      leaf_name == TARGET || leaf_name == DOCS) {
     return false;
   }
   if (ends_with(leaf_name, LIB_SUFFIX) || ends_with(leaf_name, PYC_SUFFIX) ||
