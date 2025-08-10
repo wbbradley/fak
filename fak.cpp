@@ -10,6 +10,7 @@
 #include <string>
 #include <unistd.h>
 #include <vector>
+#include <regex>
 
 const char *option_dir = "dir";
 const char *option_verbose = "verbose";
@@ -18,6 +19,7 @@ const char *option_replace = "replace";
 const char *option_filenames = "filenames";
 const char *option_no_recurse = "no-recursion";
 const char *option_no_color = "no-color";
+const char *option_regex = "regex";
 
 cmd_option_t cmd_options[] = {
     {option_find, "-f" /*opt*/, true /*mandatory*/, true /*has_data*/},
@@ -29,11 +31,12 @@ cmd_option_t cmd_options[] = {
     {option_no_color, "--no-color" /*opt*/, false /*mandatory*/,
      false /*has_data*/},
     {option_verbose, "-v" /*opt*/, false /*mandatory*/, false /*has_data*/},
+    {option_regex, "--regex" /*opt*/, false /*mandatory*/, false /*has_data*/},
 };
 
 bool string_replace(const std::string &before, const std::string &after,
                     const std::string &filename, bool do_replace,
-                    bool use_color) {
+                    bool use_color, bool use_regex) {
   std::stringstream ss(std::ios_base::out | std::ios_base::binary);
   mmap_file_t mmap_file(filename);
 
@@ -64,7 +67,7 @@ bool string_replace(const std::string &before, const std::string &after,
     const char *const pch_end = (pch + len);
     if (streamed_replace(filename, pch, pch_end, before, after, ss,
                          true /*print_matches*/, use_color /*pretty_print*/,
-                         do_replace) &&
+                         do_replace, use_regex) &&
         do_replace) {
       std::ofstream ofs;
       std::string temp_file("/var/tmp/fak.tmp");
@@ -150,6 +153,8 @@ int main(int argc, char *argv[]) {
   get_option(options, option_replace, replace);
   bool do_replace = (replace.size() != 0);
 
+  bool use_regex = get_option_exists(options, option_regex);
+
   dlog(log_info, "dir is %s, find is %s, replace is %s\n", dir.c_str(),
        find.c_str(), replace.c_str());
 
@@ -169,7 +174,7 @@ int main(int argc, char *argv[]) {
   });
 
   for (auto &filename : filenames) {
-    if (string_replace(find, replace, filename, do_replace, use_color)) {
+    if (string_replace(find, replace, filename, do_replace, use_color, use_regex)) {
       dlog(log_info, "made replacements in %s\n", filename.c_str());
     }
   }

@@ -11,7 +11,7 @@
 #endif
 
 bool check_errno(const char *tag);
-bool streamed_replace(const std::string &input_buffer_name, const char *pch_begin, const char * const pch_end, const std::string &before, const std::string &after, std::ostream &ofs, bool print_matches, bool pretty_print, bool do_replace);
+bool streamed_replace(const std::string &input_buffer_name, const char *pch_begin, const char * const pch_end, const std::string &before, const std::string &after, std::ostream &ofs, bool print_matches, bool pretty_print, bool do_replace, bool use_regex);
 double get_current_time();
 
 inline bool mask(int grf, int grf_mask)

@@ -12,6 +12,7 @@
 #include <iomanip>
 #include "logger_decls.h"
 #include <fstream>
+#include <regex>
 
 #define case_error(error) case error: error_string = #error; break
 
@@ -229,6 +230,73 @@ bool odd_pointer(const void *p)
 	return false;
 }
 
+bool streamed_replace_regex(
+		const std::string &input_buffer_name,
+		const char *pch_begin,
+	   	const char * const pch_end,
+	   	const std::string &pattern,
+	   	const std::string &replacement,
+	   	std::ostream &ofs,
+		bool print_matches,
+		bool pretty_print,
+		bool do_replace)
+{
+	std::string content(pch_begin, pch_end - pch_begin);
+	std::regex regex_pattern;
+	bool found_matches = false;
+	
+	try {
+		regex_pattern = std::regex(pattern);
+	} catch (const std::regex_error& e) {
+		dlog(log_error, "Invalid regex pattern: %s\n", e.what());
+		return false;
+	}
+	
+	std::sregex_iterator iter(content.begin(), content.end(), regex_pattern);
+	std::sregex_iterator end;
+	
+	if (iter == end) {
+		if (do_replace) {
+			ofs.write(pch_begin, pch_end - pch_begin);
+		}
+		return false;
+	}
+	
+	size_t last_pos = 0;
+	int line = 1;
+	int char_offset = 1;
+	const char *pch_last_line_break = pch_begin - 1;
+	
+	for (; iter != end; ++iter) {
+		const std::smatch& match = *iter;
+		found_matches = true;
+		
+		size_t match_pos = match.position();
+		const char *match_ptr = pch_begin + match_pos;
+		
+		advance_line_count(match_ptr, line, char_offset, pch_last_line_break);
+		
+		if (print_matches) {
+			print_match_line(input_buffer_name, line, char_offset,
+					pretty_print, pch_last_line_break, match_ptr,
+					pch_end, match.length());
+		}
+		
+		if (do_replace) {
+			ofs.write(pch_begin + last_pos, match_pos - last_pos);
+			ofs.write(replacement.c_str(), replacement.size());
+		}
+		
+		last_pos = match_pos + match.length();
+	}
+	
+	if (do_replace && last_pos < content.size()) {
+		ofs.write(pch_begin + last_pos, (pch_end - pch_begin) - last_pos);
+	}
+	
+	return found_matches;
+}
+
 bool streamed_replace(
 		const std::string &input_buffer_name,
 		const char *pch_begin,
@@ -238,8 +306,15 @@ bool streamed_replace(
 	   	std::ostream &ofs,
 		bool print_matches,
 		bool pretty_print,
-		bool do_replace)
+		bool do_replace,
+		bool use_regex)
 {
+	if (use_regex) {
+		return streamed_replace_regex(input_buffer_name, pch_begin, pch_end,
+									  before, after, ofs, print_matches,
+									  pretty_print, do_replace);
+	}
+	
 	assert(odd_pointer((void *)0x1));
 	assert(!odd_pointer((void *)0x1004));
 
